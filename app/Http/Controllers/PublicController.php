@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Ticket;
 use App\Models\Category;
+use App\Models\Staff;
+use App\Models\Department;
 use App\Models\Attachment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -17,8 +19,14 @@ class PublicController extends Controller
      */
     public function createTicket()
     {
-        $categories = Category::all();
-        return view('public.create_ticket', compact('categories'));
+        $categories = Category::orderBy('name', 'asc')->get();
+        $departments = Department::where('is_active', true)
+                      ->orderBy('name', 'asc')
+                      ->get();
+        $staffMembers = Staff::where('is_active', true)
+                      ->orderBy('name', 'asc')
+                      ->get();
+        return view('public.create_ticket', compact('categories', 'departments', 'staffMembers'));
     }
     
     /**
@@ -29,9 +37,7 @@ class PublicController extends Controller
         $validator = Validator::make($request->all(), [
             'title' => 'required|string|max:255',
             'description' => 'required|string',
-            'requester_name' => 'required|string|max:255',
-            'requester_email' => 'required|email|max:255',
-            'requester_phone' => 'nullable|string|max:20',
+            'requester_name' => 'required|exists:staff,id',
             'department' => 'nullable|string|max:100',
             'category_id' => 'nullable|exists:categories,id',
             'priority' => 'required|in:low,medium,high,critical',
@@ -44,17 +50,19 @@ class PublicController extends Controller
                 ->withInput();
         }
         
-        // Generate a unique ticket number
-        $ticketNumber = 'TKT-' . date('Ymd') . '-' . strtoupper(Str::random(5));
+        // Generate ticket number
+        $ticketNumber = 'WG-' . date('ymd') . str_pad(mt_rand(1, 9999), 4, '0', STR_PAD_LEFT);
+        
+        // Get staff details
+        $staff = Staff::findOrFail($request->requester_name);
         
         // Create the ticket
         $ticket = Ticket::create([
             'ticket_number' => $ticketNumber,
             'title' => $request->title,
             'description' => $request->description,
-            'requester_name' => $request->requester_name,
-            'requester_email' => $request->requester_email,
-            'requester_phone' => $request->requester_phone,
+            'requester_name' => $staff->name,
+            'requester_email' => $staff->email,
             'department' => $request->department,
             'category_id' => $request->category_id,
             'priority' => $request->priority,

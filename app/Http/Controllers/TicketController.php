@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Cache;
 
 class TicketController extends Controller
 {
@@ -64,8 +65,10 @@ class TicketController extends Controller
         }
         
         $tickets = $query->latest()->paginate(10);
-        $categories = Category::all();
-        $staff = Staff::where('is_active', true)->get();
+        $categories = Category::orderBy('name', 'asc')->get();
+        $staff = Staff::where('is_active', true)
+                ->orderBy('name', 'asc')
+                ->get();
         
         return view('admin.tickets.index', compact('tickets', 'categories', 'staff', 'status'));
     }
@@ -75,8 +78,10 @@ class TicketController extends Controller
      */
     public function create()
     {
-        $categories = Category::all();
-        $staff = Staff::where('is_active', true)->get();
+        $categories = Category::orderBy('name', 'asc')->get();
+        $staff = Staff::where('is_active', true)
+                ->orderBy('name', 'asc')
+                ->get();
         return view('admin.tickets.create', compact('categories', 'staff'));
     }
 
@@ -106,7 +111,7 @@ class TicketController extends Controller
         }
         
         // Generate a unique ticket number
-        $ticketNumber = 'TKT-' . date('Ymd') . '-' . strtoupper(\Illuminate\Support\Str::random(5));
+        $ticketNumber = 'WG-' . date('ymd') . str_pad(mt_rand(1, 9999), 4, '0', STR_PAD_LEFT);
         
         // Create the ticket
         $ticket = Ticket::create([
@@ -172,10 +177,13 @@ class TicketController extends Controller
     public function edit(string $id)
     {
         $ticket = Ticket::findOrFail($id);
-        $categories = Category::all();
-        $staff = Staff::where('is_active', true)->get();
+        $categories = Category::orderBy('name', 'asc')->get();
+        $staff = Staff::where('is_active', true)
+                ->orderBy('name', 'asc')
+                ->get();
+        $previousUrl = url()->previous();
         
-        return view('admin.tickets.edit', compact('ticket', 'categories', 'staff'));
+        return view('admin.tickets.edit', compact('ticket', 'categories', 'staff', 'previousUrl'));
     }
 
     /**
@@ -184,14 +192,11 @@ class TicketController extends Controller
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
-            'title' => 'required|string|max:255',
+            'subject' => 'required|string|max:255',
             'description' => 'required|string',
             'requester_name' => 'required|string|max:255',
             'requester_email' => 'required|email|max:255',
-            'requester_phone' => 'nullable|string|max:20',
-            'department' => 'nullable|string|max:100',
-            'category_id' => 'nullable|exists:categories,id',
-            'priority' => 'required|in:low,medium,high,critical',
+            'priority' => 'required|in:low,medium,high',
             'status' => 'required|in:waiting,in_progress,done',
             'assigned_to' => 'nullable|exists:staff,id',
         ]);
@@ -207,13 +212,10 @@ class TicketController extends Controller
         
         // Update the ticket
         $ticket->update([
-            'title' => $request->title,
+            'subject' => $request->subject,
             'description' => $request->description,
             'requester_name' => $request->requester_name,
             'requester_email' => $request->requester_email,
-            'requester_phone' => $request->requester_phone,
-            'department' => $request->department,
-            'category_id' => $request->category_id,
             'priority' => $request->priority,
             'status' => $request->status,
             'assigned_to' => $request->assigned_to,
@@ -231,7 +233,10 @@ class TicketController extends Controller
             $ticket->save();
         }
         
-        return redirect()->route('tickets.show', $ticket->id)
+        // Redirect to the previous URL if provided, otherwise to the show page
+        $redirectUrl = $request->input('previous_url') ?: route('tickets.show', $ticket->id);
+        
+        return redirect($redirectUrl)
             ->with('success', 'Ticket updated successfully!');
     }
 
@@ -311,18 +316,34 @@ class TicketController extends Controller
         $newStatus = $request->status;
         
         $ticket->status = $newStatus;
+        $now = now();
         
         // Update timestamps based on status changes
-        if ($oldStatus != 'in_progress' && $newStatus == 'in_progress') {
-            $ticket->follow_up_at = now();
-        } elseif ($oldStatus != 'done' && $newStatus == 'done') {
+        if ($oldStatus == 'waiting' && $newStatus == 'in_progress') {
+            // Dari waiting ke in_progress
+            $ticket->follow_up_at = $now;
+        } elseif ($oldStatus == 'in_progress' && $newStatus == 'done') {
+            // Dari in_progress ke done
+            $ticket->resolved_at = $now;
+        } elseif ($oldStatus == 'waiting' && $newStatus == 'done') {
+            // Langsung dari waiting ke done
             if (!$ticket->follow_up_at) {
-                $ticket->follow_up_at = now();
+                $ticket->follow_up_at = $now;
             }
-            $ticket->resolved_at = now();
+            $ticket->resolved_at = $now;
+        } elseif ($newStatus == 'waiting') {
+            // Jika dikembalikan ke waiting, reset timestamp
+            $ticket->follow_up_at = null;
+            $ticket->resolved_at = null;
         }
         
         $ticket->save();
+        
+        // Clear dashboard caches to update metrics immediately
+        Cache::forget('dashboard_tickets_by_status');
+        Cache::forget('dashboard_avg_times');
+        Cache::forget('dashboard_tickets_by_priority');
+        Cache::forget('dashboard_recent_tickets');
         
         // Add a comment about the status change
         Comment::create([

@@ -9,6 +9,8 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\DepartmentController;
+use App\Http\Controllers\TicketCategoryController;
+use App\Http\Controllers\ReportingController;
 
 // Public routes (no login required)
 Route::get('/', function () {
@@ -34,12 +36,23 @@ Route::middleware(['auth'])->group(function () {
     // Dashboard
     Route::get('/admin', [DashboardController::class, 'index'])->name('dashboard');
     
+    // Reporting
+    Route::get('/admin/reporting', [ReportingController::class, 'index'])->name('reporting');
+    Route::get('/admin/reporting/export/excel', [ReportingController::class, 'exportExcel'])->name('reporting.export.excel');
+    Route::get('/admin/reporting/export/pdf', [ReportingController::class, 'exportPdf'])->name('reporting.export.pdf');
+    
+    // Ticket Category Views
+    Route::get('/tickets/waiting', [TicketCategoryController::class, 'waiting'])->name('tickets.waiting');
+    Route::get('/tickets/in-progress', [TicketCategoryController::class, 'inProgress'])->name('tickets.in-progress');
+    Route::get('/tickets/done', [TicketCategoryController::class, 'done'])->name('tickets.done');
+    Route::get('/tickets/all', [TicketCategoryController::class, 'all'])->name('tickets.all');
+    
     // Tickets management
-    Route::resource('tickets', TicketController::class);
+    Route::resource('tickets', TicketController::class)->except(['destroy']);
     
     // Additional ticket actions
     Route::post('/tickets/{id}/comment', [TicketController::class, 'addComment'])->name('tickets.comment');
-    Route::post('/tickets/{id}/status', [TicketController::class, 'changeStatus'])->name('tickets.status');
+    Route::put('/tickets/{id}/change-status', [TicketController::class, 'changeStatus'])->name('tickets.change-status');
     Route::post('/tickets/{id}/assign', [TicketController::class, 'assignTicket'])->name('tickets.assign');
     
     // Categories management

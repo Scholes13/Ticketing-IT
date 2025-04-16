@@ -16,6 +16,8 @@ return new class extends Migration
             $table->string('name');
             $table->string('email')->unique();
             $table->string('position')->nullable();
+            $table->enum('gender', ['male', 'female'])->nullable();
+            $table->string('phone')->nullable();
             $table->string('department')->nullable();
             $table->boolean('is_active')->default(true);
             $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();

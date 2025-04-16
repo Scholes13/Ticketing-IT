@@ -107,7 +107,7 @@
                 </div>
             </div>
             <div class="bg-gray-50 px-6 py-3 flex justify-between items-center">
-                <a href="{{ route('tickets.index') }}" class="text-blue-600 text-sm font-medium hover:text-blue-800">Lihat Detail</a>
+                <a href="{{ route('tickets.all') }}" class="text-blue-600 text-sm font-medium hover:text-blue-800">Lihat Detail</a>
                 <i class="fas fa-chevron-right text-blue-600 text-sm"></i>
             </div>
         </div>
@@ -126,7 +126,7 @@
                 </div>
             </div>
             <div class="bg-gray-50 px-6 py-3 flex justify-between items-center">
-                <a href="{{ route('tickets.index', ['status' => 'waiting']) }}" class="text-blue-600 text-sm font-medium hover:text-blue-800">Lihat Detail</a>
+                <a href="{{ route('tickets.waiting') }}" class="text-blue-600 text-sm font-medium hover:text-blue-800">Lihat Detail</a>
                 <i class="fas fa-chevron-right text-blue-600 text-sm"></i>
             </div>
         </div>
@@ -145,7 +145,7 @@
                 </div>
             </div>
             <div class="bg-gray-50 px-6 py-3 flex justify-between items-center">
-                <a href="{{ route('tickets.index', ['status' => 'in_progress']) }}" class="text-blue-600 text-sm font-medium hover:text-blue-800">Lihat Detail</a>
+                <a href="{{ route('tickets.in-progress') }}" class="text-blue-600 text-sm font-medium hover:text-blue-800">Lihat Detail</a>
                 <i class="fas fa-chevron-right text-blue-600 text-sm"></i>
             </div>
         </div>
@@ -164,7 +164,7 @@
                 </div>
             </div>
             <div class="bg-gray-50 px-6 py-3 flex justify-between items-center">
-                <a href="{{ route('tickets.index', ['status' => 'done']) }}" class="text-blue-600 text-sm font-medium hover:text-blue-800">Lihat Detail</a>
+                <a href="{{ route('tickets.done') }}" class="text-blue-600 text-sm font-medium hover:text-blue-800">Lihat Detail</a>
                 <i class="fas fa-chevron-right text-blue-600 text-sm"></i>
             </div>
         </div>
@@ -181,43 +181,58 @@
             </div>
             <div class="p-6">
                 <div class="space-y-4">
+                    <!-- Waktu Follow Up -->
                     <div class="flex items-center justify-between">
                         <div class="flex items-center">
                             <div class="bg-blue-100 p-2 rounded-lg mr-4">
                                 <i class="fas fa-stopwatch text-blue-600"></i>
                             </div>
                             <div>
-                                <p class="text-gray-500 text-sm">Waktu Respon Rata-rata</p>
-                                <p class="text-gray-800 font-medium">{{ number_format($avgFollowUpTime, 1) }} jam</p>
+                                <p class="text-gray-500 text-sm">Waktu Follow Up</p>
+                                <p class="text-gray-800 font-medium">{{ number_format($avgFollowUpTime, 1) }} {{ $avgFollowUpUnit }}</p>
+                                <p class="text-xs text-gray-500 mt-1">Dari Waiting ke In Progress</p>
                             </div>
                         </div>
-                        <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-medium">Respons</span>
+                        <div class="flex flex-col items-end">
+                            <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-medium">Respon Awal</span>
+                            <span class="text-xs text-gray-500 mt-1">Waiting → In Progress</span>
+                        </div>
                     </div>
                     
+                    <!-- Waktu Proses -->
                     <div class="flex items-center justify-between">
                         <div class="flex items-center">
                             <div class="bg-purple-100 p-2 rounded-lg mr-4">
                                 <i class="fas fa-tasks text-purple-600"></i>
                             </div>
                             <div>
-                                <p class="text-gray-500 text-sm">Waktu Proses Rata-rata</p>
-                                <p class="text-gray-800 font-medium">{{ number_format($avgProcessingTime, 1) }} jam</p>
+                                <p class="text-gray-500 text-sm">Waktu Proses</p>
+                                <p class="text-gray-800 font-medium">{{ number_format($avgProcessingTime, 1) }} {{ $avgProcessingUnit }}</p>
+                                <p class="text-xs text-gray-500 mt-1">Dari In Progress ke Done</p>
                             </div>
                         </div>
-                        <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-medium">Proses</span>
+                        <div class="flex flex-col items-end">
+                            <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs font-medium">Penanganan</span>
+                            <span class="text-xs text-gray-500 mt-1">In Progress → Done</span>
+                        </div>
                     </div>
-                    
+
+                    <!-- Total Waktu -->
                     <div class="flex items-center justify-between">
                         <div class="flex items-center">
-                            <div class="bg-amber-100 p-2 rounded-lg mr-4">
-                                <i class="fas fa-flag-checkered text-amber-600"></i>
+                            <div class="bg-indigo-100 p-2 rounded-lg mr-4">
+                                <i class="fas fa-clock text-indigo-600"></i>
                             </div>
                             <div>
-                                <p class="text-gray-500 text-sm">Waktu Penyelesaian Rata-rata</p>
-                                <p class="text-gray-800 font-medium">{{ number_format($avgTotalTime, 1) }} jam</p>
+                                <p class="text-gray-500 text-sm">Total Waktu</p>
+                                <p class="text-gray-800 font-medium">{{ number_format($avgTotalTime, 1) }} {{ $avgTotalUnit }}</p>
+                                <p class="text-xs text-gray-500 mt-1">Total waktu penyelesaian</p>
                             </div>
                         </div>
-                        <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-medium">Total</span>
+                        <div class="flex flex-col items-end">
+                            <span class="bg-indigo-100 text-indigo-800 px-2 py-1 rounded text-xs font-medium">Total</span>
+                            <span class="text-xs text-gray-500 mt-1">Waiting → Done</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -530,3 +545,6 @@
     applyFilter(todayFilter);
 </script>
 @endpush
+
+
+

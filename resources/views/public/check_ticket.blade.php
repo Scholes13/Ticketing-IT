@@ -71,10 +71,10 @@
             
             <form action="{{ route('public.ticket.status') }}" method="POST">
                 @csrf
-                <div class="mb-4">
+                <div class="mb-3">
                     <label for="ticket_number" class="form-label">Ticket Number <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control form-control-lg" id="ticket_number" name="ticket_number" value="{{ old('ticket_number') }}" placeholder="e.g. TKT-20250415-ABCDE" required>
-                    <div class="form-text">Enter the ticket number you received when you submitted your ticket</div>
+                    <input type="text" class="form-control form-control-lg" id="ticket_number" name="ticket_number" value="{{ old('ticket_number') }}" placeholder="e.g. WG-250415-0123" required>
+                    <div class="form-text">Enter the ticket number you received when submitting your request</div>
                 </div>
                 
                 <div class="d-grid gap-2">

@@ -16,5 +16,8 @@ class DatabaseSeeder extends Seeder
         
         // Call the category seeder to create ticket categories
         $this->call(CategorySeeder::class);
+        
+        // Call the department seeder to create departments
+        $this->call(DepartmentSeeder::class);
     }
 }

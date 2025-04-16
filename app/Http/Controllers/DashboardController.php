@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Staff;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 
 class DashboardController extends Controller
 {
@@ -21,89 +22,155 @@ class DashboardController extends Controller
     }
     
     /**
+     * Format duration in minutes to appropriate unit (seconds, minutes, or hours)
+     */
+    private function formatDuration($minutes)
+    {
+        if ($minutes < 1) {
+            $seconds = round($minutes * 60);
+            return [
+                'value' => $seconds,
+                'unit' => 'detik'
+            ];
+        } elseif ($minutes < 60) {
+            return [
+                'value' => round($minutes, 1),
+                'unit' => 'menit'
+            ];
+        } else {
+            return [
+                'value' => round($minutes / 60, 1),
+                'unit' => 'jam'
+            ];
+        }
+    }
+
+    /**
      * Show the dashboard with analytics
      */
     public function index()
     {
-        // Count tickets by status
-        $ticketsByStatus = Ticket::select('status', DB::raw('count(*) as total'))
-            ->groupBy('status')
-            ->pluck('total', 'status')
-            ->toArray();
+        // Use shorter caching to improve real-time updates
+        $cacheTTL = 1; // Cache for 1 minute
         
-        // Count tickets by priority
-        $ticketsByPriority = Ticket::select('priority', DB::raw('count(*) as total'))
-            ->groupBy('priority')
-            ->pluck('total', 'priority')
-            ->toArray();
+        // Count tickets by status - use caching
+        $ticketsByStatus = Cache::remember('dashboard_tickets_by_status', $cacheTTL, function() {
+            return Ticket::select('status', DB::raw('count(*) as total'))
+                ->groupBy('status')
+                ->pluck('total', 'status')
+                ->toArray();
+        });
         
-        // Count tickets by category
-        $ticketsByCategory = Ticket::select('categories.name', DB::raw('count(*) as total'))
-            ->leftJoin('categories', 'tickets.category_id', '=', 'categories.id')
-            ->groupBy('categories.name')
-            ->pluck('total', 'name')
-            ->toArray();
+        // Count tickets by priority - use caching
+        $ticketsByPriority = Cache::remember('dashboard_tickets_by_priority', $cacheTTL, function() {
+            return Ticket::select('priority', DB::raw('count(*) as total'))
+                ->groupBy('priority')
+                ->pluck('total', 'priority')
+                ->toArray();
+        });
         
-        // Calculate average follow-up time (waiting to in_progress) using PHP instead of SQL
-        $ticketsWithFollowUp = Ticket::whereNotNull('follow_up_at')->get();
-        $totalFollowUpHours = 0;
-        $followUpCount = count($ticketsWithFollowUp);
+        // Count tickets by category - use caching
+        $ticketsByCategory = Cache::remember('dashboard_tickets_by_category', $cacheTTL, function() {
+            return Ticket::select('categories.name', DB::raw('count(*) as total'))
+                ->leftJoin('categories', 'tickets.category_id', '=', 'categories.id')
+                ->groupBy('categories.name')
+                ->pluck('total', 'name')
+                ->toArray();
+        });
         
-        foreach ($ticketsWithFollowUp as $ticket) {
-            $totalFollowUpHours += $ticket->created_at->diffInHours($ticket->follow_up_at);
-        }
+        // Calculate average times - use more efficient queries with shorter cache
+        $avgTimes = Cache::remember('dashboard_avg_times', $cacheTTL, function() {
+            // Follow-up time (waiting to in_progress)
+            $avgFollowUp = DB::select("
+                SELECT AVG(TIMESTAMPDIFF(MINUTE, created_at, follow_up_at)) as avg_minutes,
+                       COUNT(*) as total_tickets
+                FROM tickets
+                WHERE follow_up_at IS NOT NULL 
+                AND status IN ('in_progress', 'done')
+            ");
+            
+            // Processing time (in_progress to done)
+            $avgProcessing = DB::select("
+                SELECT AVG(TIMESTAMPDIFF(MINUTE, follow_up_at, resolved_at)) as avg_minutes,
+                       COUNT(*) as total_tickets
+                FROM tickets
+                WHERE follow_up_at IS NOT NULL 
+                AND resolved_at IS NOT NULL 
+                AND status = 'done'
+            ");
+            
+            // Total resolution time (waiting to done)
+            $avgTotal = DB::select("
+                SELECT AVG(TIMESTAMPDIFF(MINUTE, created_at, resolved_at)) as avg_minutes,
+                       COUNT(*) as total_tickets
+                FROM tickets
+                WHERE resolved_at IS NOT NULL 
+                AND status = 'done'
+            ");
+            
+            // Format durations
+            $followUpTime = $this->formatDuration($avgFollowUp[0]->avg_minutes ?? 0);
+            $processingTime = $this->formatDuration($avgProcessing[0]->avg_minutes ?? 0);
+            $totalTime = $this->formatDuration($avgTotal[0]->avg_minutes ?? 0);
+            
+            return [
+                'follow_up' => $followUpTime['value'],
+                'follow_up_unit' => $followUpTime['unit'],
+                'follow_up_count' => $avgFollowUp[0]->total_tickets ?? 0,
+                'processing' => $processingTime['value'],
+                'processing_unit' => $processingTime['unit'],
+                'processing_count' => $avgProcessing[0]->total_tickets ?? 0,
+                'total' => $totalTime['value'],
+                'total_unit' => $totalTime['unit'],
+                'total_count' => $avgTotal[0]->total_tickets ?? 0
+            ];
+        });
         
-        $avgFollowUpTime = $followUpCount > 0 ? $totalFollowUpHours / $followUpCount : 0;
+        // Recent tickets - using eager loading to reduce queries
+        $recentTickets = Cache::remember('dashboard_recent_tickets', $cacheTTL / 3, function() {
+            return Ticket::with(['category', 'staff'])
+                ->latest()
+                ->take(5)
+                ->get();
+        });
         
-        // Calculate average processing time (in_progress to done)
-        $ticketsResolved = Ticket::whereNotNull('follow_up_at')->whereNotNull('resolved_at')->get();
-        $totalProcessingHours = 0;
-        $resolvedCount = count($ticketsResolved);
+        // Tickets by staff - use caching
+        $ticketsByStaff = Cache::remember('dashboard_tickets_by_staff', $cacheTTL, function() {
+            return Ticket::select('staff.name', DB::raw('count(*) as total'))
+                ->leftJoin('staff', 'tickets.assigned_to', '=', 'staff.id')
+                ->whereNotNull('staff.name')
+                ->groupBy('staff.name')
+                ->pluck('total', 'name')
+                ->toArray();
+        });
         
-        foreach ($ticketsResolved as $ticket) {
-            $totalProcessingHours += $ticket->follow_up_at->diffInHours($ticket->resolved_at);
-        }
+        // Tickets created over time (last 30 days) - use caching
+        $ticketsOverTime = Cache::remember('dashboard_tickets_over_time', $cacheTTL, function() {
+            return Ticket::select(DB::raw('DATE(created_at) as date'), DB::raw('count(*) as total'))
+                ->where('created_at', '>=', now()->subDays(30))
+                ->groupBy('date')
+                ->pluck('total', 'date')
+                ->toArray();
+        });
         
-        $avgProcessingTime = $resolvedCount > 0 ? $totalProcessingHours / $resolvedCount : 0;
-        
-        // Calculate average total resolution time (created to done)
-        $ticketsCompleted = Ticket::whereNotNull('resolved_at')->get();
-        $totalResolutionHours = 0;
-        $completedCount = count($ticketsCompleted);
-        
-        foreach ($ticketsCompleted as $ticket) {
-            $totalResolutionHours += $ticket->created_at->diffInHours($ticket->resolved_at);
-        }
-        
-        $avgTotalTime = $completedCount > 0 ? $totalResolutionHours / $completedCount : 0;
-        
-        // Recent tickets
-        $recentTickets = Ticket::with(['category', 'staff'])
-            ->latest()
-            ->take(5)
-            ->get();
-        
-        // Tickets by staff
-        $ticketsByStaff = Ticket::select('staff.name', DB::raw('count(*) as total'))
-            ->leftJoin('staff', 'tickets.assigned_to', '=', 'staff.id')
-            ->groupBy('staff.name')
-            ->pluck('total', 'name')
-            ->toArray();
-        
-        // Tickets created over time (last 30 days)
-        $ticketsOverTime = Ticket::select(DB::raw('DATE(created_at) as date'), DB::raw('count(*) as total'))
-            ->where('created_at', '>=', now()->subDays(30))
-            ->groupBy('date')
-            ->pluck('total', 'date')
-            ->toArray();
+        // Assign values for view
+        $avgFollowUpTime = $avgTimes['follow_up'];
+        $avgFollowUpUnit = $avgTimes['follow_up_unit'];
+        $avgProcessingTime = $avgTimes['processing'];
+        $avgProcessingUnit = $avgTimes['processing_unit'];
+        $avgTotalTime = $avgTimes['total'];
+        $avgTotalUnit = $avgTimes['total_unit'];
         
         return view('admin.dashboard', compact(
             'ticketsByStatus',
             'ticketsByPriority',
             'ticketsByCategory',
             'avgFollowUpTime',
+            'avgFollowUpUnit',
             'avgProcessingTime',
+            'avgProcessingUnit',
             'avgTotalTime',
+            'avgTotalUnit',
             'recentTickets',
             'ticketsByStaff',
             'ticketsOverTime'
