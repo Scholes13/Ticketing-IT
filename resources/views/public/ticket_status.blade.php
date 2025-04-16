@@ -153,7 +153,7 @@
                         @if($ticket->category)
                             <span class="badge bg-secondary me-2">{{ $ticket->category->name }}</span>
                         @endif
-                        <span class="text-muted ms-2">Submitted on {{ $ticket->created_at->format('M d, Y h:i A') }}</span>
+                        <span class="text-muted ms-2">Dikirim pada {{ $ticket->created_at->formatIndonesianShort() }}</span>
                     </div>
                 </div>
             </div>
@@ -190,7 +190,7 @@
                         <i class="bi bi-plus-circle-fill"></i>
                     </div>
                     <div class="timeline-content">
-                        <div class="timeline-date">{{ $ticket->created_at->format('M d, Y h:i A') }}</div>
+                        <div class="timeline-date">{{ $ticket->created_at->formatIndonesianShort() }}</div>
                         <div>Ticket created</div>
                     </div>
                 </div>
@@ -201,7 +201,7 @@
                         <i class="bi bi-hourglass-split"></i>
                     </div>
                     <div class="timeline-content">
-                        <div class="timeline-date">{{ $ticket->follow_up_at->format('M d, Y h:i A') }}</div>
+                        <div class="timeline-date">{{ $ticket->follow_up_at->formatIndonesianShort() }}</div>
                         <div>Ticket processing started</div>
                     </div>
                 </div>
@@ -213,7 +213,7 @@
                         <i class="bi bi-check-circle-fill"></i>
                     </div>
                     <div class="timeline-content">
-                        <div class="timeline-date">{{ $ticket->resolved_at->format('M d, Y h:i A') }}</div>
+                        <div class="timeline-date">{{ $ticket->resolved_at->formatIndonesianShort() }}</div>
                         <div>Ticket resolved</div>
                     </div>
                 </div>
@@ -225,7 +225,7 @@
                 <h5>Comments</h5>
                 @foreach($ticket->comments->where('is_private', false) as $comment)
                 <div class="comment-item">
-                    <div class="comment-date">{{ $comment->created_at->format('M d, Y h:i A') }}</div>
+                    <div class="comment-date">{{ $comment->created_at->formatIndonesianShort() }}</div>
                     <div class="comment-content">{{ $comment->content }}</div>
                     @if($comment->attachment_path)
                     <div class="mt-2">

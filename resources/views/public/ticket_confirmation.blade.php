@@ -76,7 +76,7 @@
                     <div class="col-md-6">
                         <p><strong>Submitted by:</strong> {{ $ticket->requester_name }}</p>
                         <p><strong>Email:</strong> {{ $ticket->requester_email }}</p>
-                        <p><strong>Submitted on:</strong> {{ $ticket->created_at->format('M d, Y h:i A') }}</p>
+                        <p><strong>Submitted on:</strong> {{ $ticket->created_at->formatIndonesianShort() }}</p>
                     </div>
                 </div>
             </div>
