@@ -25,6 +25,7 @@ Route::get('/ticket/confirmation/{ticket_number}', [PublicController::class, 'ti
 // Ticket status check
 Route::get('/ticket/check', [PublicController::class, 'checkTicketForm'])->name('public.check.ticket');
 Route::post('/ticket/status', [PublicController::class, 'checkTicketStatus'])->name('public.ticket.status');
+Route::get('/ticket/status/{ticket_number}', [PublicController::class, 'viewTicketStatus'])->name('public.view.ticket.status');
 
 // Authentication routes
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');

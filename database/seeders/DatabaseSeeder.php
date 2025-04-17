@@ -19,5 +19,18 @@ class DatabaseSeeder extends Seeder
         
         // Call the department seeder to create departments
         $this->call(DepartmentSeeder::class);
+        
+        // Create default staff member for ticket assignment
+        \App\Models\Staff::firstOrCreate(
+            ['email' => 'pramuji.arif@example.com'],
+            [
+                'name' => 'Pramuji Arif Yulianto',
+                'position' => 'Support Specialist',
+                'gender' => 'Male',
+                'phone' => '08123456789',
+                'department' => 'BAS',
+                'is_active' => true,
+            ]
+        );
     }
 }

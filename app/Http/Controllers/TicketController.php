@@ -7,11 +7,14 @@ use App\Models\Staff;
 use App\Models\Category;
 use App\Models\Comment;
 use App\Models\Attachment;
+use App\Mail\TicketStatusInProgress;
+use App\Mail\TicketStatusDone;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Mail;
 
 class TicketController extends Controller
 {
@@ -166,7 +169,9 @@ class TicketController extends Controller
     {
         $ticket = Ticket::with(['category', 'staff', 'comments.user', 'attachments'])
             ->findOrFail($id);
-        $staff = Staff::where('is_active', true)->get();
+        $staff = Staff::where('is_active', true)
+                ->where('department', 'BAS')
+                ->get();
         
         return view('admin.tickets.show', compact('ticket', 'staff'));
     }
@@ -179,6 +184,7 @@ class TicketController extends Controller
         $ticket = Ticket::findOrFail($id);
         $categories = Category::orderBy('name', 'asc')->get();
         $staff = Staff::where('is_active', true)
+                ->where('department', 'BAS')
                 ->orderBy('name', 'asc')
                 ->get();
         $previousUrl = url()->previous();
@@ -209,6 +215,7 @@ class TicketController extends Controller
         
         $ticket = Ticket::findOrFail($id);
         $oldStatus = $ticket->status;
+        $newStatus = $request->status;
         
         // Update the ticket
         $ticket->update([
@@ -217,20 +224,31 @@ class TicketController extends Controller
             'requester_name' => $request->requester_name,
             'requester_email' => $request->requester_email,
             'priority' => $request->priority,
-            'status' => $request->status,
+            'status' => $newStatus,
             'assigned_to' => $request->assigned_to,
         ]);
         
         // Update timestamps based on status changes
-        if ($oldStatus != 'in_progress' && $request->status == 'in_progress') {
+        if ($oldStatus != 'in_progress' && $newStatus == 'in_progress') {
             $ticket->follow_up_at = now();
             $ticket->save();
-        } elseif ($oldStatus != 'done' && $request->status == 'done') {
+        } elseif ($oldStatus != 'done' && $newStatus == 'done') {
             if (!$ticket->follow_up_at) {
                 $ticket->follow_up_at = now();
             }
             $ticket->resolved_at = now();
             $ticket->save();
+        }
+        
+        // Send email notifications based on status changes
+        if ($oldStatus == 'waiting' && $newStatus == 'in_progress') {
+            // Kirim email notifikasi status "in progress"
+            Mail::to($ticket->requester_email)
+                ->queue(new TicketStatusInProgress($ticket));
+        } elseif (($oldStatus == 'in_progress' || $oldStatus == 'waiting') && $newStatus == 'done') {
+            // Kirim email notifikasi status "done"
+            Mail::to($ticket->requester_email)
+                ->queue(new TicketStatusDone($ticket));
         }
         
         // Redirect to the previous URL if provided, otherwise to the show page
@@ -353,6 +371,17 @@ class TicketController extends Controller
             'is_private' => true,
         ]);
         
+        // Send email notifications based on status changes
+        if ($oldStatus == 'waiting' && $newStatus == 'in_progress') {
+            // Kirim email notifikasi status "in progress"
+            Mail::to($ticket->requester_email)
+                ->queue(new TicketStatusInProgress($ticket));
+        } elseif (($oldStatus == 'in_progress' || $oldStatus == 'waiting') && $newStatus == 'done') {
+            // Kirim email notifikasi status "done"
+            Mail::to($ticket->requester_email)
+                ->queue(new TicketStatusDone($ticket));
+        }
+        
         return redirect()->route('tickets.show', $ticket->id)
             ->with('success', 'Ticket status updated successfully!');
     }
@@ -374,6 +403,13 @@ class TicketController extends Controller
         
         $ticket = Ticket::findOrFail($id);
         $staff = Staff::findOrFail($request->assigned_to);
+        
+        // Check if staff is from BAS department
+        if ($staff->department !== 'BAS') {
+            return redirect()->back()
+                ->withErrors(['assigned_to' => 'Only staff from BAS department can be assigned to tickets'])
+                ->withInput();
+        }
         
         $ticket->assigned_to = $staff->id;
         $ticket->save();

@@ -7,8 +7,10 @@ use App\Models\Category;
 use App\Models\Staff;
 use App\Models\Department;
 use App\Models\Attachment;
+use App\Mail\TicketConfirmation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
@@ -56,6 +58,16 @@ class PublicController extends Controller
         // Get staff details
         $staff = Staff::findOrFail($request->requester_name);
         
+        // Find default staff to assign (Pramuji Arif Yulianto from BAS department)
+        $defaultStaff = Staff::where('name', 'Pramuji Arif Yulianto')
+            ->where('department', 'BAS')
+            ->first();
+            
+        // If not found, try to find any staff from BAS department
+        if (!$defaultStaff) {
+            $defaultStaff = Staff::where('department', 'BAS')->first();
+        }
+        
         // Create the ticket
         $ticket = Ticket::create([
             'ticket_number' => $ticketNumber,
@@ -67,6 +79,7 @@ class PublicController extends Controller
             'category_id' => $request->category_id,
             'priority' => $request->priority,
             'status' => 'waiting',
+            'assigned_to' => $defaultStaff ? $defaultStaff->id : null,
         ]);
         
         // Handle file attachments
@@ -84,6 +97,15 @@ class PublicController extends Controller
                     'file_size' => $file->getSize(),
                 ]);
             }
+        }
+        
+        // Send confirmation email
+        try {
+            Mail::to($ticket->requester_email)
+                ->send(new TicketConfirmation($ticket));
+        } catch (\Exception $e) {
+            // Log the error but don't stop the process
+            \Log::error('Failed to send ticket confirmation email: ' . $e->getMessage());
         }
         
         return redirect()->route('public.ticket.confirmation', $ticket->ticket_number)
@@ -124,6 +146,20 @@ class PublicController extends Controller
         }
         
         $ticket = Ticket::where('ticket_number', $request->ticket_number)
+            ->with(['category', 'attachments', 'comments' => function($query) {
+                $query->where('is_private', false);
+            }])
+            ->firstOrFail();
+        
+        return view('public.ticket_status', compact('ticket'));
+    }
+    
+    /**
+     * View ticket status directly via URL (for email links)
+     */
+    public function viewTicketStatus($ticketNumber)
+    {
+        $ticket = Ticket::where('ticket_number', $ticketNumber)
             ->with(['category', 'attachments', 'comments' => function($query) {
                 $query->where('is_private', false);
             }])
