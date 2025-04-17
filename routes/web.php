@@ -9,8 +9,11 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\DepartmentController;
+use App\Http\Controllers\Admin\KnowledgeController;
+use App\Http\Controllers\Admin\KnowledgeCategoryController;
 use App\Http\Controllers\TicketCategoryController;
 use App\Http\Controllers\ReportingController;
+use App\Http\Controllers\KnowledgeBaseController;
 
 // Public routes (no login required)
 Route::get('/', function () {
@@ -26,6 +29,14 @@ Route::get('/ticket/confirmation/{ticket_number}', [PublicController::class, 'ti
 Route::get('/ticket/check', [PublicController::class, 'checkTicketForm'])->name('public.check.ticket');
 Route::post('/ticket/status', [PublicController::class, 'checkTicketStatus'])->name('public.ticket.status');
 Route::get('/ticket/status/{ticket_number}', [PublicController::class, 'viewTicketStatus'])->name('public.view.ticket.status');
+
+// Knowledge Base public routes
+Route::get('/knowledge', [KnowledgeBaseController::class, 'home'])->name('knowledge.home');
+Route::get('/knowledge/search', [KnowledgeBaseController::class, 'search'])->name('knowledge.search');
+Route::get('/knowledge/category/{slug}', [KnowledgeBaseController::class, 'category'])->name('knowledge.category');
+Route::get('/knowledge/article/{slug}', [KnowledgeBaseController::class, 'showArticle'])->name('knowledge.article.show');
+Route::get('/knowledge/{categorySlug}/{articleSlug}', [KnowledgeBaseController::class, 'article'])->name('knowledge.article');
+Route::post('/knowledge/suggest-articles', [KnowledgeBaseController::class, 'suggestArticles'])->name('knowledge.suggest-articles');
 
 // Authentication routes
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
@@ -56,6 +67,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/tickets/{id}/comment', [TicketController::class, 'addComment'])->name('tickets.comment');
     Route::put('/tickets/{id}/change-status', [TicketController::class, 'changeStatus'])->name('tickets.change-status');
     Route::post('/tickets/{id}/assign', [TicketController::class, 'assignTicket'])->name('tickets.assign');
+    Route::post('/tickets/{id}/link-article', [KnowledgeBaseController::class, 'linkArticleToTicket'])->name('tickets.link-article');
     
     // Categories management
     Route::resource('admin/categories', CategoryController::class)->names('admin.categories');
@@ -65,4 +77,32 @@ Route::middleware(['auth'])->group(function () {
     
     // Staff management
     Route::resource('staff', AdminController::class);
+    
+    // Knowledge Base management
+    Route::resource('admin/knowledge', KnowledgeController::class)->names('admin.knowledge');
+    Route::resource('admin/knowledge-categories', KnowledgeCategoryController::class)->names('admin.knowledge.categories');
+
+    // Add article-specific routes
+    Route::group(['prefix' => 'admin/knowledge/articles', 'as' => 'admin.knowledge.articles.'], function () {
+        Route::get('/', [KnowledgeController::class, 'index'])->name('index');
+        Route::get('/published', [KnowledgeController::class, 'published'])->name('published');
+        Route::get('/drafts', [KnowledgeController::class, 'drafts'])->name('drafts');
+        Route::get('/featured', [KnowledgeController::class, 'featured'])->name('featured');
+        Route::get('/create', [KnowledgeController::class, 'create'])->name('create');
+        Route::post('/', [KnowledgeController::class, 'store'])->name('store');
+        Route::get('/{id}', [KnowledgeController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [KnowledgeController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [KnowledgeController::class, 'update'])->name('update');
+        Route::delete('/{id}', [KnowledgeController::class, 'destroy'])->name('destroy');
+        
+        // Additional article-specific actions
+        Route::put('/{id}/publish', [KnowledgeController::class, 'publish'])->name('publish');
+        Route::put('/{id}/unpublish', [KnowledgeController::class, 'unpublish'])->name('unpublish');
+        Route::put('/{id}/feature', [KnowledgeController::class, 'feature'])->name('feature');
+        Route::put('/{id}/unfeature', [KnowledgeController::class, 'unfeature'])->name('unfeature');
+    });
+
+    // Add route for generating slugs and uploading images
+    Route::post('admin/knowledge/generate-slug', [KnowledgeController::class, 'generateSlug'])->name('admin.knowledge.generate-slug');
+    Route::post('admin/knowledge/upload-image', [KnowledgeController::class, 'uploadImage'])->name('admin.knowledge.upload-image');
 });

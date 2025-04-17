@@ -30,7 +30,7 @@ class PublicController extends Controller
         $staffMembers = Staff::where('is_active', true)
                       ->orderBy('name', 'asc')
                       ->get();
-        return view('public.create_ticket', compact('categories', 'departments', 'staffMembers'));
+        return view('public.ticket_form_with_kb', compact('categories', 'departments', 'staffMembers'));
     }
     
     /**

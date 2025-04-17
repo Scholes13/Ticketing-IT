@@ -409,6 +409,27 @@
                             </a>
                         </div>
                     </div>
+
+                    <!-- Divider -->
+                    <hr class="sidebar-divider">
+
+                    <!-- Knowledge Base Menu -->
+                    <div class="sidebar-category">Knowledge Base</div>
+                    <a href="{{ route('admin.knowledge.index') }}" class="sidebar-link py-3 px-4 text-gray-300 hover:text-white rounded-lg mb-2 tooltip {{ request()->routeIs('admin.knowledge.index') ? 'active' : '' }}">
+                        <i class="fas fa-book w-5 h-5 text-center mr-3"></i>
+                        <span class="sidebar-text">Daftar Artikel</span>
+                        <span class="tooltip-text">Knowledge Base Articles</span>
+                    </a>
+                    <a href="{{ route('admin.knowledge.create') }}" class="sidebar-link py-3 px-4 text-gray-300 hover:text-white rounded-lg mb-2 tooltip {{ request()->routeIs('admin.knowledge.create') ? 'active' : '' }}">
+                        <i class="fas fa-plus-circle w-5 h-5 text-center mr-3"></i>
+                        <span class="sidebar-text">Tambah Artikel</span>
+                        <span class="tooltip-text">Add New Article</span>
+                    </a>
+                    <a href="{{ route('admin.knowledge.categories.index') }}" class="sidebar-link py-3 px-4 text-gray-300 hover:text-white rounded-lg mb-2 tooltip {{ request()->routeIs('admin.knowledge.categories.*') ? 'active' : '' }}">
+                        <i class="fas fa-folder w-5 h-5 text-center mr-3"></i>
+                        <span class="sidebar-text">Kategori</span>
+                        <span class="tooltip-text">Knowledge Categories</span>
+                    </a>
                 </nav>
                 
                 <div class="border-t border-gray-700 mt-8 pt-6 px-6 user-info">

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Ticket extends Model
@@ -51,6 +52,11 @@ class Ticket extends Model
     public function attachments(): HasMany
     {
         return $this->hasMany(Attachment::class);
+    }
+    
+    public function knowledgeArticles(): BelongsToMany
+    {
+        return $this->belongsToMany(KnowledgeArticle::class, 'ticket_knowledge_article');
     }
     
     public function scopeWaiting($query)
