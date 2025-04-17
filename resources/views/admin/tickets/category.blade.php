@@ -5,6 +5,7 @@
 @push('styles')
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
     
@@ -300,7 +301,7 @@
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pemohon</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prioritas</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
@@ -336,35 +337,113 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     @if($ticket->status == 'waiting')
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                            <svg class="-ml-0.5 mr-1.5 h-2 w-2 text-yellow-400" fill="currentColor" viewBox="0 0 8 8">
-                                                <circle cx="4" cy="4" r="3" />
-                                            </svg>
+                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 shadow-sm border border-yellow-200">
+                                            <span class="w-2 h-2 rounded-full bg-yellow-400 mr-2"></span>
                                             Menunggu
                                         </span>
                                     @elseif($ticket->status == 'in_progress')
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                            <svg class="-ml-0.5 mr-1.5 h-2 w-2 text-blue-400" fill="currentColor" viewBox="0 0 8 8">
-                                                <circle cx="4" cy="4" r="3" />
-                                            </svg>
+                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 shadow-sm border border-blue-200">
+                                            <span class="w-2 h-2 rounded-full bg-blue-400 mr-2 animate-pulse"></span>
                                             Dalam Proses
                                         </span>
                                     @elseif($ticket->status == 'done')
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                            <svg class="-ml-0.5 mr-1.5 h-2 w-2 text-green-400" fill="currentColor" viewBox="0 0 8 8">
-                                                <circle cx="4" cy="4" r="3" />
-                                            </svg>
+                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 shadow-sm border border-green-200">
+                                            <span class="w-2 h-2 rounded-full bg-green-500 mr-2"></span>
                                             Selesai
                                         </span>
                                     @endif
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                                    <a href="{{ route('tickets.show', $ticket->id) }}" class="text-indigo-600 hover:text-indigo-900" title="Lihat">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                    <a href="{{ route('tickets.edit', $ticket->id) }}" class="text-yellow-600 hover:text-yellow-900" title="Edit">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
+                                <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+                                    <div class="flex items-center justify-center space-x-2">
+                                        <a href="{{ route('tickets.show', $ticket->id) }}" class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors duration-150 ease-in-out shadow-sm" title="Lihat Detail">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{{ route('tickets.edit', $ticket->id) }}" class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors duration-150 ease-in-out shadow-sm" title="Edit Tiket">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        
+                                        @if($status != 'all')
+                                        <!-- Status Dropdown -->
+                                        <div class="relative inline-block text-left" x-data="{ statusOpen: false }">
+                                            <!-- Status Trigger Button -->
+                                            <div @click="statusOpen = !statusOpen" class="cursor-pointer inline-flex items-center justify-center rounded-md bg-white px-3 py-1.5 text-sm font-medium shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+                                                @if($ticket->status == 'waiting')
+                                                <span class="inline-flex items-center mr-1">
+                                                    <span class="w-2 h-2 rounded-full bg-yellow-400 mr-1.5"></span>
+                                                    <span class="text-yellow-700">Waiting</span>
+                                                </span>
+                                                @elseif($ticket->status == 'in_progress')
+                                                <span class="inline-flex items-center mr-1">
+                                                    <span class="w-2 h-2 rounded-full bg-blue-400 mr-1.5"></span>
+                                                    <span class="text-blue-700">In Progress</span>
+                                                </span>
+                                                @elseif($ticket->status == 'done')
+                                                <span class="inline-flex items-center mr-1">
+                                                    <span class="w-2 h-2 rounded-full bg-green-400 mr-1.5"></span>
+                                                    <span class="text-green-700">Done</span>
+                                                </span>
+                                                @endif
+                                                <svg class="-mr-1 h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                                                    <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+                                                </svg>
+                                            </div>
+                                            
+                                            <!-- Status Dropdown Menu -->
+                                            <div x-show="statusOpen" 
+                                                @click.away="statusOpen = false"
+                                                x-transition:enter="transition ease-out duration-100"
+                                                x-transition:enter-start="transform opacity-0 scale-95"
+                                                x-transition:enter-end="transform opacity-100 scale-100"
+                                                x-transition:leave="transition ease-in duration-75"
+                                                x-transition:leave-start="transform opacity-100 scale-100"
+                                                x-transition:leave-end="transform opacity-0 scale-95"
+                                                class="absolute right-0 z-50 mt-2 w-44 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none status-dropdown-menu"
+                                                style="display: none;">
+                                                <div class="py-1">
+                                                    @if($ticket->status != 'waiting')
+                                                    <form action="{{ route('tickets.change-status', $ticket->id) }}" method="POST" class="block">
+                                                        @csrf
+                                                        @method('PUT')
+                                                        <input type="hidden" name="status" value="waiting">
+                                                        <button type="submit" class="w-full px-4 py-2 text-left text-sm flex items-center text-yellow-700 hover:bg-yellow-50">
+                                                            <span class="w-2 h-2 rounded-full bg-yellow-400 mr-2"></span>
+                                                            Waiting
+                                                        </button>
+                                                    </form>
+                                                    @endif
+                                                    
+                                                    @if($ticket->status != 'in_progress')
+                                                    <form action="{{ route('tickets.change-status', $ticket->id) }}" method="POST" class="block">
+                                                        @csrf
+                                                        @method('PUT')
+                                                        <input type="hidden" name="status" value="in_progress">
+                                                        <button type="submit" class="w-full px-4 py-2 text-left text-sm flex items-center text-blue-700 hover:bg-blue-50">
+                                                            <span class="w-2 h-2 rounded-full bg-blue-400 mr-2"></span>
+                                                            In Progress
+                                                        </button>
+                                                    </form>
+                                                    @endif
+                                                    
+                                                    @if($ticket->status != 'done')
+                                                    <form action="{{ route('tickets.change-status', $ticket->id) }}" method="POST" class="block">
+                                                        @csrf
+                                                        @method('PUT')
+                                                        <input type="hidden" name="status" value="done">
+                                                        <button type="submit" class="w-full px-4 py-2 text-left text-sm flex items-center text-green-700 hover:bg-green-50">
+                                                            <span class="w-2 h-2 rounded-full bg-green-400 mr-2"></span>
+                                                            Done
+                                                        </button>
+                                                    </form>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </div>
+                                        @endif
+                                        
+                                        <button onclick="confirmDelete('{{ $ticket->id }}', '{{ $ticket->ticket_number }}', '{{ $ticket->title }}')" class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-red-50 text-red-600 hover:bg-red-100 transition-colors duration-150 ease-in-out shadow-sm" title="Hapus Tiket">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         @empty
@@ -391,12 +470,76 @@
         </div>
     </div>
 </div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+        <div class="border-b px-6 py-3">
+            <h3 class="text-lg font-medium text-gray-900">Konfirmasi Hapus Tiket</h3>
+        </div>
+        <div class="p-6">
+            <p class="text-gray-700">Apakah Anda yakin ingin menghapus tiket berikut?</p>
+            <div class="mt-4 bg-gray-50 p-4 rounded-lg">
+                <p class="font-medium text-gray-900" id="deleteTicketNumber"></p>
+                <p class="text-gray-600" id="deleteTicketTitle"></p>
+            </div>
+            <div class="mt-6 flex justify-end space-x-3">
+                <button type="button" onclick="closeDeleteModal()" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-md">
+                    Batal
+                </button>
+                <form id="deleteForm" method="POST" action="">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md">
+                        Hapus Tiket
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Ticket priority charts can be added here if needed
+        // Initialize all dropdowns
+        document.querySelectorAll('.status-dropdown').forEach(function(dropdown) {
+            dropdown.addEventListener('click', function(event) {
+                event.stopPropagation();
+                this.querySelector('.dropdown-menu').classList.toggle('hidden');
+            });
+        });
+        
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(event) {
+            document.querySelectorAll('.dropdown-menu').forEach(function(menu) {
+                if (!menu.classList.contains('hidden')) {
+                    menu.classList.add('hidden');
+                }
+            });
+        });
+    });
+    
+    // Delete confirmation modal functions
+    function confirmDelete(ticketId, ticketNumber, ticketTitle) {
+        document.getElementById('deleteTicketNumber').textContent = ticketNumber;
+        document.getElementById('deleteTicketTitle').textContent = ticketTitle;
+        document.getElementById('deleteForm').action = "{{ url('tickets') }}/" + ticketId;
+        document.getElementById('deleteModal').classList.remove('hidden');
+        document.getElementById('deleteModal').classList.add('flex');
+    }
+    
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').classList.remove('flex');
+        document.getElementById('deleteModal').classList.add('hidden');
+    }
+    
+    // Close modal when clicking outside the modal content
+    document.getElementById('deleteModal').addEventListener('click', function(event) {
+        if (event.target === this) {
+            closeDeleteModal();
+        }
     });
 </script>
 @endpush 

@@ -25,6 +25,7 @@ class Ticket extends Model
         'assigned_to',
         'follow_up_at',
         'resolved_at',
+        'form_token',
     ];
     
     protected $casts = [

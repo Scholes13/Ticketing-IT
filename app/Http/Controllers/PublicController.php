@@ -13,6 +13,8 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Cache;
 
 class PublicController extends Controller
 {
@@ -44,6 +46,7 @@ class PublicController extends Controller
             'category_id' => 'nullable|exists:categories,id',
             'priority' => 'required|in:low,medium,high,critical',
             'attachments.*' => 'nullable|file|max:10240',
+            'form_token' => 'required|string',
         ]);
         
         if ($validator->fails()) {
@@ -51,6 +54,20 @@ class PublicController extends Controller
                 ->withErrors($validator)
                 ->withInput();
         }
+        
+        // Check for duplicate submission using the form token
+        $formToken = $request->input('form_token');
+        $cacheKey = 'form_submission_' . $formToken;
+        
+        // If this form was already submitted, redirect to prevent duplicate
+        if (Cache::has($cacheKey)) {
+            return redirect()->route('public.check.ticket')
+                ->with('warning', 'Your ticket has already been submitted. You can check its status here.');
+        }
+        
+        // Store form token in cache to prevent duplicate submissions
+        // Set an expiration of 30 minutes
+        Cache::put($cacheKey, true, 1800);
         
         // Generate ticket number
         $ticketNumber = 'WG-' . date('ymd') . str_pad(mt_rand(1, 9999), 4, '0', STR_PAD_LEFT);
@@ -80,6 +97,7 @@ class PublicController extends Controller
             'priority' => $request->priority,
             'status' => 'waiting',
             'assigned_to' => $defaultStaff ? $defaultStaff->id : null,
+            'form_token' => $formToken, // Store form token with the ticket for reference
         ]);
         
         // Handle file attachments

@@ -50,6 +50,7 @@ Route::middleware(['auth'])->group(function () {
     
     // Tickets management
     Route::resource('tickets', TicketController::class)->except(['destroy']);
+    Route::delete('/tickets/{id}', [TicketController::class, 'destroy'])->name('tickets.destroy');
     
     // Additional ticket actions
     Route::post('/tickets/{id}/comment', [TicketController::class, 'addComment'])->name('tickets.comment');
