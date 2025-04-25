@@ -36,6 +36,7 @@ Route::post('/logout', [LogoutController::class, 'logout'])->name('logout');
 Route::middleware(['auth'])->group(function () {
     // Dashboard
     Route::get('/admin', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/admin/filter', [DashboardController::class, 'filterData'])->name('dashboard.filter');
     
     // Reporting
     Route::get('/admin/reporting', [ReportingController::class, 'index'])->name('reporting');

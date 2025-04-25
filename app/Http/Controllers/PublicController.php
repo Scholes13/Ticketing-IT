@@ -13,6 +13,7 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Session;
 
 class PublicController extends Controller
 {
@@ -36,6 +37,33 @@ class PublicController extends Controller
      */
     public function storeTicket(Request $request)
     {
+        // Check for duplicate submission using the submission token
+        $submissionToken = $request->input('_submission_token');
+        
+        // If token is missing, reject the submission
+        if (!$submissionToken) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['error' => 'Invalid form submission. Please try again.']);
+        }
+        
+        // Check if this token has been used before
+        if (Session::has('used_tokens') && in_array($submissionToken, Session::get('used_tokens', []))) {
+            // This is a duplicate submission, redirect back to the form
+            return redirect()->back()
+                ->with('error', 'Your ticket has already been submitted. Please do not submit the same form multiple times.');
+        }
+        
+        // Store the token in the session
+        $usedTokens = Session::get('used_tokens', []);
+        $usedTokens[] = $submissionToken;
+        Session::put('used_tokens', $usedTokens);
+        
+        // Limit the number of stored tokens to prevent session bloat
+        if (count($usedTokens) > 10) {
+            Session::put('used_tokens', array_slice($usedTokens, -10));
+        }
+
         $validator = Validator::make($request->all(), [
             'title' => 'required|string|max:255',
             'description' => 'required|string',

@@ -1,0 +1,358 @@
+/**
+ * Theme and Customization Styles
+ */
+
+/* Light Theme (Default) */
+.light-theme {
+    --bg-main: #f9fafb;
+    --bg-card: #ffffff;
+    --bg-sidebar: #ffffff;
+    --text-primary: #1f2937;
+    --text-secondary: #4b5563;
+    --text-muted: #6b7280;
+    --border-color: #e5e7eb;
+    --primary-color: #4f46e5;
+    --primary-hover: #4338ca;
+    --success-color: #10b981;
+    --warning-color: #f59e0b;
+    --danger-color: #ef4444;
+    --info-color: #3b82f6;
+}
+
+/* Dark Theme */
+.dark-theme {
+    --bg-main: #111827;
+    --bg-card: #1f2937;
+    --bg-sidebar: #1f2937;
+    --text-primary: #f9fafb;
+    --text-secondary: #e5e7eb;
+    --text-muted: #9ca3af;
+    --border-color: #374151;
+    --primary-color: #818cf8;
+    --primary-hover: #6366f1;
+    --success-color: #34d399;
+    --warning-color: #fbbf24;
+    --danger-color: #f87171;
+    --info-color: #60a5fa;
+}
+
+/* Apply theme variables */
+.dark-theme body,
+.dark-theme .bg-white {
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+}
+
+.dark-theme .card,
+.dark-theme .bg-white {
+    background-color: var(--bg-card);
+}
+
+.dark-theme .sidebar {
+    background-color: var(--bg-sidebar);
+    border-color: var(--border-color);
+}
+
+.dark-theme .text-gray-800,
+.dark-theme .text-gray-900 {
+    color: var(--text-primary) !important;
+}
+
+.dark-theme .text-gray-600,
+.dark-theme .text-gray-700 {
+    color: var(--text-secondary) !important;
+}
+
+.dark-theme .text-gray-400,
+.dark-theme .text-gray-500 {
+    color: var(--text-muted) !important;
+}
+
+.dark-theme .border,
+.dark-theme .border-gray-200,
+.dark-theme .border-gray-300,
+.dark-theme .divide-gray-200 > * {
+    border-color: var(--border-color) !important;
+}
+
+.dark-theme .bg-gray-50,
+.dark-theme .bg-gray-100 {
+    background-color: #2d3748 !important;
+}
+
+.dark-theme .shadow-sm,
+.dark-theme .shadow,
+.dark-theme .shadow-md {
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2) !important;
+}
+
+.dark-theme input,
+.dark-theme select,
+.dark-theme textarea,
+.dark-theme .form-select,
+.dark-theme .form-control {
+    background-color: #374151;
+    border-color: #4b5563;
+    color: #f9fafb;
+}
+
+.dark-theme input::placeholder,
+.dark-theme textarea::placeholder {
+    color: #9ca3af;
+}
+
+.dark-theme .btn-primary,
+.dark-theme .bg-indigo-600 {
+    background-color: var(--primary-color) !important;
+}
+
+.dark-theme .btn-primary:hover,
+.dark-theme .bg-indigo-700 {
+    background-color: var(--primary-hover) !important;
+}
+
+.dark-theme .btn-secondary,
+.dark-theme .bg-gray-200 {
+    background-color: #374151 !important;
+    color: #e5e7eb !important;
+}
+
+.dark-theme .btn-secondary:hover,
+.dark-theme .bg-gray-300 {
+    background-color: #4b5563 !important;
+}
+
+.dark-theme .table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(55, 65, 81, 0.3);
+}
+
+.dark-theme .dropdown-menu {
+    background-color: #2d3748;
+    border-color: #4b5563;
+}
+
+.dark-theme .dropdown-item {
+    color: #e5e7eb;
+}
+
+.dark-theme .dropdown-item:hover {
+    background-color: #374151;
+    color: #f9fafb;
+}
+
+/* Font Size Customization */
+.text-sm {
+    font-size: 0.875rem !important;
+}
+
+.text-base {
+    font-size: 1rem !important;
+}
+
+.text-lg {
+    font-size: 1.125rem !important;
+}
+
+/* Dense UI Mode */
+.dense-ui .card {
+    margin-bottom: 0.75rem;
+}
+
+.dense-ui .table th,
+.dense-ui .table td {
+    padding: 0.5rem 0.75rem;
+}
+
+.dense-ui .form-group {
+    margin-bottom: 0.75rem;
+}
+
+.dense-ui .container,
+.dense-ui .container-fluid {
+    padding: 0.75rem;
+}
+
+.dense-ui .card-body {
+    padding: 1rem;
+}
+
+.dense-ui .btn {
+    padding: 0.25rem 0.5rem;
+}
+
+.dense-ui .pagination {
+    margin: 0.5rem 0;
+}
+
+.dense-ui .breadcrumb {
+    padding: 0.5rem 0;
+    margin-bottom: 0.5rem;
+}
+
+/* Preferences Modal Styling */
+.preferences-modal {
+    max-width: 600px;
+    width: 100%;
+}
+
+.preferences-modal h3 {
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.preferences-section {
+    margin-bottom: 1.5rem;
+}
+
+.preferences-section h4 {
+    font-size: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.preference-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+}
+
+.preference-item label {
+    font-weight: 500;
+}
+
+/* Dark mode specific form elements */
+.dark-theme .custom-switch .custom-control-label::before {
+    background-color: #4b5563;
+}
+
+.dark-theme .custom-switch .custom-control-input:checked ~ .custom-control-label::before {
+    background-color: var(--primary-color);
+}
+
+.dark-theme .flatpickr-calendar {
+    background-color: var(--bg-card);
+    border-color: var(--border-color);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.dark-theme .flatpickr-day {
+    color: var(--text-secondary);
+}
+
+.dark-theme .flatpickr-day.selected {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.dark-theme .flatpickr-months .flatpickr-month,
+.dark-theme .flatpickr-weekdays {
+    background-color: var(--bg-card);
+    color: var(--text-primary);
+}
+
+.dark-theme .flatpickr-current-month .flatpickr-monthDropdown-months,
+.dark-theme .flatpickr-current-month input.cur-year {
+    color: var(--text-primary);
+}
+
+.dark-theme .numInputWrapper:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Custom Toggle Switch */
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 48px;
+    height: 24px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 24px;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .toggle-slider {
+    background-color: var(--primary-color);
+}
+
+input:focus + .toggle-slider {
+    box-shadow: 0 0 1px var(--primary-color);
+}
+
+input:checked + .toggle-slider:before {
+    transform: translateX(24px);
+}
+
+/* Theme toggle icon */
+.toggle-slider .fas {
+    position: absolute;
+    top: 5px;
+    color: white;
+    font-size: 0.75rem;
+}
+
+.toggle-slider .fa-sun {
+    left: 6px;
+    opacity: 1;
+}
+
+.toggle-slider .fa-moon {
+    right: 6px;
+    opacity: 0;
+}
+
+input:checked + .toggle-slider .fa-sun {
+    opacity: 0;
+}
+
+input:checked + .toggle-slider .fa-moon {
+    opacity: 1;
+}
+
+/* Animations */
+.transition-opacity {
+    transition: opacity 0.3s ease;
+}
+
+.transition-transform {
+    transition: transform 0.3s ease;
+}
+
+.hover-scale:hover {
+    transform: scale(1.05);
+}
+
+.hover-shadow:hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.dark-theme .hover-shadow:hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+} 

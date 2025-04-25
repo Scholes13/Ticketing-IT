@@ -66,16 +66,50 @@
         </div>
         <div class="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-4 w-full md:w-auto">
             <!-- Date Filter -->
-            <div class="flex items-center bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                <button id="todayFilter" class="px-4 py-2 text-sm font-medium filter-active">
+            <div class="hidden md:block">
+                <div class="relative inline-block">
+                    <button id="dateFilterDropdown" class="flex items-center justify-between bg-white rounded-lg shadow-sm border border-gray-200 px-4 py-2 text-sm font-medium min-w-[160px]">
+                        <span id="currentFilterText">Hari Ini</span>
+                        <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <div id="filterDropdownMenu" class="hidden absolute z-10 mt-2 w-full bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
+                        <button id="todayFilter" class="w-full px-4 py-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-100 filter-active">
                     Hari Ini
                 </button>
-                <button id="weekFilter" class="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100">
+                        <button id="weekFilter" class="w-full px-4 py-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-100">
                     Minggu Ini
                 </button>
-                <button id="monthFilter" class="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100">
+                        <button id="monthFilter" class="w-full px-4 py-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-100">
                     Bulan Ini
                 </button>
+                        <button id="yearFilter" class="w-full px-4 py-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-100">
+                            Tahun Ini
+                        </button>
+                        <button id="allFilter" class="w-full px-4 py-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-100">
+                            Semua Data
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Mobile Dropdown Filter -->
+            <div class="md:hidden w-full">
+                <div class="relative">
+                    <select id="mobileFilter" class="appearance-none bg-white rounded-lg shadow-sm border border-gray-200 px-4 py-2 pr-8 text-sm font-medium w-full">
+                        <option value="today">Hari Ini</option>
+                        <option value="week">Minggu Ini</option>
+                        <option value="month">Bulan Ini</option>
+                        <option value="year">Tahun Ini</option>
+                        <option value="all">Semua Data</option>
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </div>
+                </div>
             </div>
             
             <div class="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-4 w-full md:w-auto">
@@ -83,7 +117,7 @@
                     <input type="text" placeholder="Cari tiket..." class="pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full">
                     <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
                 </div>
-                <a href="{{ route('tickets.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center whitespace-nowrap">
+                <a href="{{ route('tickets.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center justify-center whitespace-nowrap">
                     <i class="fas fa-plus mr-2"></i> Buat Tiket Baru
                 </a>
             </div>
@@ -98,7 +132,7 @@
                 <div class="flex justify-between items-center">
                     <div>
                         <p class="text-gray-500 text-sm font-medium">Total Tiket</p>
-                        <h3 class="text-3xl font-bold text-gray-800 mt-1">{{ array_sum($ticketsByStatus) }}</h3>
+                        <h3 class="text-3xl font-bold text-gray-800 mt-1" id="total-tickets">{{ array_sum($ticketsByStatus) }}</h3>
                         <p class="text-green-500 text-sm mt-2"><i class="fas fa-ticket-alt mr-1"></i> Semua tiket</p>
                     </div>
                     <div class="bg-blue-100 p-4 rounded-full">
@@ -117,7 +151,7 @@
                 <div class="flex justify-between items-center">
                     <div>
                         <p class="text-gray-500 text-sm font-medium">Menunggu</p>
-                        <h3 class="text-3xl font-bold text-gray-800 mt-1">{{ $ticketsByStatus['waiting'] ?? 0 }}</h3>
+                        <h3 class="text-3xl font-bold text-gray-800 mt-1" id="waiting-tickets">{{ $ticketsByStatus['waiting'] ?? 0 }}</h3>
                         <p class="text-amber-500 text-sm mt-2"><i class="fas fa-clock mr-1"></i> Belum diproses</p>
                     </div>
                     <div class="bg-amber-100 p-4 rounded-full">
@@ -136,7 +170,7 @@
                 <div class="flex justify-between items-center">
                     <div>
                         <p class="text-gray-500 text-sm font-medium">Dalam Proses</p>
-                        <h3 class="text-3xl font-bold text-gray-800 mt-1">{{ $ticketsByStatus['in_progress'] ?? 0 }}</h3>
+                        <h3 class="text-3xl font-bold text-gray-800 mt-1" id="in-progress-tickets">{{ $ticketsByStatus['in_progress'] ?? 0 }}</h3>
                         <p class="text-cyan-500 text-sm mt-2"><i class="fas fa-spinner mr-1"></i> Sedang ditangani</p>
                     </div>
                     <div class="bg-cyan-100 p-4 rounded-full">
@@ -155,7 +189,7 @@
                 <div class="flex justify-between items-center">
                     <div>
                         <p class="text-gray-500 text-sm font-medium">Selesai</p>
-                        <h3 class="text-3xl font-bold text-gray-800 mt-1">{{ $ticketsByStatus['done'] ?? 0 }}</h3>
+                        <h3 class="text-3xl font-bold text-gray-800 mt-1" id="done-tickets">{{ $ticketsByStatus['done'] ?? 0 }}</h3>
                         <p class="text-emerald-500 text-sm mt-2"><i class="fas fa-check-circle mr-1"></i> Telah diselesaikan</p>
                     </div>
                     <div class="bg-emerald-100 p-4 rounded-full">
@@ -189,7 +223,7 @@
                             </div>
                             <div>
                                 <p class="text-gray-500 text-sm">Waktu Follow Up</p>
-                                <p class="text-gray-800 font-medium">{{ number_format($avgFollowUpTime, 1) }} {{ $avgFollowUpUnit }}</p>
+                                <p class="text-gray-800 font-medium"><span id="avg-follow-up-time">{{ number_format($avgFollowUpTime, 1) }}</span> <span id="avg-follow-up-unit">{{ $avgFollowUpUnit }}</span></p>
                                 <p class="text-xs text-gray-500 mt-1">Dari Waiting ke In Progress</p>
                             </div>
                         </div>
@@ -207,7 +241,7 @@
                             </div>
                             <div>
                                 <p class="text-gray-500 text-sm">Waktu Proses</p>
-                                <p class="text-gray-800 font-medium">{{ number_format($avgProcessingTime, 1) }} {{ $avgProcessingUnit }}</p>
+                                <p class="text-gray-800 font-medium"><span id="avg-processing-time">{{ number_format($avgProcessingTime, 1) }}</span> <span id="avg-processing-unit">{{ $avgProcessingUnit }}</span></p>
                                 <p class="text-xs text-gray-500 mt-1">Dari In Progress ke Done</p>
                             </div>
                         </div>
@@ -225,7 +259,7 @@
                             </div>
                             <div>
                                 <p class="text-gray-500 text-sm">Total Waktu</p>
-                                <p class="text-gray-800 font-medium">{{ number_format($avgTotalTime, 1) }} {{ $avgTotalUnit }}</p>
+                                <p class="text-gray-800 font-medium"><span id="avg-total-time">{{ number_format($avgTotalTime, 1) }}</span> <span id="avg-total-unit">{{ $avgTotalUnit }}</span></p>
                                 <p class="text-xs text-gray-500 mt-1">Total waktu penyelesaian</p>
                             </div>
                         </div>
@@ -290,7 +324,7 @@
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prioritas</th>
                         </tr>
                     </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
+                    <tbody class="bg-white divide-y divide-gray-200" id="recent-tickets-table-body">
                         @foreach($recentTickets as $ticket)
                         <tr class="hover:bg-gray-50 cursor-pointer">
                             <td class="px-6 py-4 whitespace-nowrap">
@@ -494,55 +528,262 @@
     const todayFilter = document.getElementById('todayFilter');
     const weekFilter = document.getElementById('weekFilter');
     const monthFilter = document.getElementById('monthFilter');
+    const yearFilter = document.getElementById('yearFilter');
+    const allFilter = document.getElementById('allFilter');
+    const mobileFilter = document.getElementById('mobileFilter');
 
-    function resetFilters() {
-        todayFilter.classList.remove('filter-active');
-        weekFilter.classList.remove('filter-active');
-        monthFilter.classList.remove('filter-active');
+    function applyFilter(filterElement) {
+        // Reset all filters
+        const allFilterButtons = [todayFilter, weekFilter, monthFilter, yearFilter, allFilter];
+        allFilterButtons.forEach(btn => {
+            btn.classList.remove('filter-active');
+            btn.classList.add('text-gray-700', 'hover:bg-gray-100');
+        });
         
-        todayFilter.classList.add('text-gray-600', 'hover:bg-gray-100');
-        weekFilter.classList.add('text-gray-600', 'hover:bg-gray-100');
-        monthFilter.classList.add('text-gray-600', 'hover:bg-gray-100');
+        let period;
+        let filterText;
+        
+        // Handle both button clicks and mobile dropdown
+        if (typeof filterElement === 'string') {
+            period = filterElement;
+            // Handle mobile dropdown
+        } else {
+            // Get the period based on which filter was clicked
+            if (filterElement.id === 'todayFilter' || filterElement === todayFilter) {
+                period = 'today';
+                filterText = 'Hari Ini';
+            } else if (filterElement.id === 'weekFilter' || filterElement === weekFilter) {
+                period = 'week';
+                filterText = 'Minggu Ini';
+            } else if (filterElement.id === 'monthFilter' || filterElement === monthFilter) {
+                period = 'month';
+                filterText = 'Bulan Ini';
+            } else if (filterElement.id === 'yearFilter' || filterElement === yearFilter) {
+                period = 'year';
+                filterText = 'Tahun Ini';
+            } else if (filterElement.id === 'allFilter' || filterElement === allFilter) {
+                period = 'all';
+                filterText = 'Semua Data';
+            }
+            
+            // Update dropdown text if it's a button click
+            if (filterElement.id) {
+                document.getElementById('currentFilterText').textContent = filterText;
+                // Hide dropdown menu after selection
+                document.getElementById('filterDropdownMenu').classList.add('hidden');
+            }
+        }
+        
+        // Update button UI
+        switch(period) {
+            case 'today':
+                todayFilter.classList.add('filter-active');
+                todayFilter.classList.remove('text-gray-700', 'hover:bg-gray-100');
+                break;
+            case 'week':
+                weekFilter.classList.add('filter-active');
+                weekFilter.classList.remove('text-gray-700', 'hover:bg-gray-100');
+                break;
+            case 'month':
+                monthFilter.classList.add('filter-active');
+                monthFilter.classList.remove('text-gray-700', 'hover:bg-gray-100');
+                break;
+            case 'year':
+                yearFilter.classList.add('filter-active');
+                yearFilter.classList.remove('text-gray-700', 'hover:bg-gray-100');
+                break;
+            case 'all':
+                allFilter.classList.add('filter-active');
+                allFilter.classList.remove('text-gray-700', 'hover:bg-gray-100');
+                break;
+        }
+        
+        // Show loading state
+        showLoadingState();
+        
+        // Make AJAX call to get filtered data
+        fetch(`{{ route('dashboard.filter') }}?period=${period}`)
+            .then(response => response.json())
+            .then(data => {
+                updateDashboardData(data);
+                hideLoadingState();
+            })
+            .catch(error => {
+                console.error('Error fetching dashboard data:', error);
+                hideLoadingState();
+            });
     }
 
-    function applyFilter(selectedFilter) {
-        resetFilters();
-        
-        selectedFilter.classList.add('filter-active');
-        selectedFilter.classList.remove('text-gray-600', 'hover:bg-gray-100');
-        
-        // Here you would typically make an API call or filter data
-        // For this example, we'll just log the selected filter
-        const filterText = selectedFilter.textContent.trim();
-        console.log(`Filter applied: ${filterText}`);
-        
-        // Update dashboard data based on filter
-        // This is where you would update your charts and tables
-        // For demo purposes, we'll simulate a loading state
-        simulateLoading();
-    }
-
-    function simulateLoading() {
-        // Show loading state (in a real app, you would update the actual data)
+    function showLoadingState() {
         const cards = document.querySelectorAll('.card-hover');
         cards.forEach(card => {
             card.classList.add('opacity-75');
         });
         
-        // Simulate API call delay
-        setTimeout(() => {
+        // Add loading spinner if needed
+        document.querySelectorAll('.stat-value').forEach(el => {
+            el.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        });
+    }
+    
+    function hideLoadingState() {
+        const cards = document.querySelectorAll('.card-hover');
             cards.forEach(card => {
                 card.classList.remove('opacity-75');
             });
-        }, 800);
+    }
+    
+    function updateDashboardData(data) {
+        // Update ticket status counts
+        const waitingCount = data.ticketsByStatus['waiting'] || 0;
+        const inProgressCount = data.ticketsByStatus['in_progress'] || 0;
+        const doneCount = data.ticketsByStatus['done'] || 0;
+        const totalCount = waitingCount + inProgressCount + doneCount;
+        
+        // Update statistics cards
+        document.getElementById('total-tickets').textContent = totalCount;
+        document.getElementById('waiting-tickets').textContent = waitingCount;
+        document.getElementById('in-progress-tickets').textContent = inProgressCount;
+        document.getElementById('done-tickets').textContent = doneCount;
+        
+        // Update average times
+        document.getElementById('avg-follow-up-time').textContent = data.avgTimes.follow_up;
+        document.getElementById('avg-follow-up-unit').textContent = data.avgTimes.follow_up_unit;
+        document.getElementById('avg-processing-time').textContent = data.avgTimes.processing;
+        document.getElementById('avg-processing-unit').textContent = data.avgTimes.processing_unit;
+        document.getElementById('avg-total-time').textContent = data.avgTimes.total;
+        document.getElementById('avg-total-unit').textContent = data.avgTimes.total_unit;
+        
+        // Update priority chart
+        if (window.priorityChart) {
+            window.priorityChart.data.datasets[0].data = [
+                data.ticketsByPriority['low'] || 0,
+                data.ticketsByPriority['medium'] || 0,
+                data.ticketsByPriority['high'] || 0,
+                data.ticketsByPriority['critical'] || 0
+            ];
+            window.priorityChart.update();
+        }
+        
+        // Update recent tickets table
+        updateRecentTicketsTable(data.recentTickets);
+    }
+    
+    function updateRecentTicketsTable(recentTickets) {
+        const ticketTableBody = document.getElementById('recent-tickets-table-body');
+        if (!ticketTableBody) return;
+        
+        let html = '';
+        
+        if (recentTickets.length === 0) {
+            html = '<tr><td colspan="5" class="px-6 py-4 text-center text-gray-500">Tidak ada tiket terbaru</td></tr>';
+        } else {
+            recentTickets.forEach(ticket => {
+                let statusClass = '';
+                let statusText = '';
+                
+                if (ticket.status === 'waiting') {
+                    statusClass = 'bg-amber-100 text-amber-800';
+                    statusText = 'Menunggu';
+                } else if (ticket.status === 'in_progress') {
+                    statusClass = 'bg-blue-100 text-blue-800';
+                    statusText = 'Diproses';
+                } else if (ticket.status === 'done') {
+                    statusClass = 'bg-green-100 text-green-800';
+                    statusText = 'Selesai';
+                }
+                
+                html += `
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm font-medium text-gray-900">${ticket.ticket_number}</div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="text-sm text-gray-900">${ticket.title}</div>
+                        <div class="text-xs text-gray-500">${ticket.requester_name}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClass}">
+                            ${statusText}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        ${new Date(ticket.created_at).toLocaleString('id-ID')}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <a href="/tickets/${ticket.id}" class="text-blue-600 hover:text-blue-900">Detail</a>
+                    </td>
+                </tr>
+                `;
+            });
+        }
+        
+        ticketTableBody.innerHTML = html;
     }
 
     todayFilter.addEventListener('click', () => applyFilter(todayFilter));
     weekFilter.addEventListener('click', () => applyFilter(weekFilter));
     monthFilter.addEventListener('click', () => applyFilter(monthFilter));
+    yearFilter.addEventListener('click', () => applyFilter(yearFilter));
+    allFilter.addEventListener('click', () => applyFilter(allFilter));
 
-    // Initialize with today filter active
+    // Dropdown toggle
+    document.getElementById('dateFilterDropdown').addEventListener('click', function() {
+        document.getElementById('filterDropdownMenu').classList.toggle('hidden');
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(event) {
+        const dropdown = document.getElementById('filterDropdownMenu');
+        const dropdownButton = document.getElementById('dateFilterDropdown');
+        
+        if (!dropdown.contains(event.target) && !dropdownButton.contains(event.target)) {
+            dropdown.classList.add('hidden');
+        }
+    });
+
+    // Mobile dropdown filter change handler
+    mobileFilter.addEventListener('change', function() {
+        applyFilter(this.value);
+        
+        // Synchronize with desktop filter display
+        document.getElementById('currentFilterText').textContent = this.options[this.selectedIndex].text;
+    });
+
+    // Initialize with today's filter
+    document.addEventListener('DOMContentLoaded', function() {
     applyFilter(todayFilter);
+    });
+    
+    // Store priority chart reference
+    const priorityChart = new Chart(priorityCtx, {
+        type: 'doughnut',
+        data: priorityData,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '70%',
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.raw || 0;
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = Math.round((value / total) * 100);
+                            return `${label}: ${value} (${percentage}%)`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+    
+    // Store chart reference in window object for later updates
+    window.priorityChart = priorityChart;
 </script>
 @endpush
 
